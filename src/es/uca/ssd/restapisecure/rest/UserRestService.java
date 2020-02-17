@@ -5,22 +5,23 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import es.uca.ssd.restapisecure.dao.UserDao;
 import es.uca.ssd.restapisecure.model.UserEntity;
+import es.uca.ssd.restapisecure.service.UserService;
 
 @Path("/users")
 public class UserRestService {
 	
-	private UserDao userDao;
+	private UserService userService;
 	
 	public UserRestService() {
-		userDao = new UserDao();
+		userService = new UserService();
 	}
 	
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getUser() {
-		return userDao.create(new UserEntity("username1", "password1", "name1", "surname1", "email1")).getUsername();
+		UserEntity user = userService.create("username1", "password1", "name1", "surname1", "email1");
+		return userService.getUser(user.getId()).toString();
 	}
 
 }

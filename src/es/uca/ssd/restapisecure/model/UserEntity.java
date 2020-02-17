@@ -39,8 +39,8 @@ public class UserEntity implements Serializable {
 	private String surname;
 
 	@NotNull
-//	@NotEmpty
-//	@Email
+	// @NotEmpty
+	// @Email
 	@Column(unique = true)
 	private String email;
 
@@ -101,6 +101,12 @@ public class UserEntity implements Serializable {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	@Override
+	public String toString() {
+		return "UserEntity [id=" + id + ", username=" + username + ", password=" + password + ", name=" + name
+				+ ", surname=" + surname + ", email=" + email + "]";
 	}
 
 }

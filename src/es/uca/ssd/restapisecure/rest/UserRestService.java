@@ -1,6 +1,12 @@
 package es.uca.ssd.restapisecure.rest;
 
+import java.util.List;
+import java.util.UUID;
+
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -23,5 +29,4 @@ public class UserRestService {
 		UserEntity user = userService.create("username1", "password1", "name1", "surname1", "email1");
 		return userService.getUser(user.getId()).toString();
 	}
-
 }

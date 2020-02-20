@@ -29,4 +29,39 @@ public class UserRestService {
 		UserEntity user = userService.create("username1", "password1", "name1", "surname1", "email1");
 		return userService.getUser(user.getId()).toString();
 	}
+	
+	@GET
+	@Path("/getusers")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<UserEntity> getUsers(){
+		UserService userService = new UserService();
+		List<UserEntity> listUsers = userService.getUsers();
+		return listUsers;
+	}
+	
+	@POST
+	@Path("/createwithkey")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public UserEntity getApiKey(UserEntity myUser) {
+		UUID apikey = UUID.randomUUID();
+		UserService userService = new UserService();
+		
+		UserEntity user = userService.create(myUser.getUsername(), myUser.getPassword(), myUser.getName(), myUser.getSurname(), myUser.getEmail(),apikey.toString());		
+		return user;
+	}
+	
+	@POST
+	@Path("/testApi")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String testing(@HeaderParam("id") Integer id, @HeaderParam("apikey") String apikey) {
+		UserEntity User = userService.getUser(id);
+		if (User != null) {
+			if (User.getApiKey().equals(apikey)) {
+				return "GRANTED";
+			}
+		}
+		return "Denied";
+	}
+
 }

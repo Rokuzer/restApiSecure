@@ -29,6 +29,10 @@ public class UserService {
 		return userDao.create(new UserEntity(username, password, name, surname, email));
 	}
 	
+	public UserEntity create(String username, String password, String name, String surname, String email,String apikey) {
+		return userDao.create(new UserEntity(username, password, name, surname, email,apikey));
+	}
+	
 	public UserEntity update(UserEntity user) {
 		return userDao.update(user);
 	}

@@ -90,6 +90,31 @@ public class CourseDao {
 		}
 		return course;
 	}
+	
+	public Boolean searchByName(String name) {
+		Transaction transaction = null;
+		Object listOfCourse = null;
+		Boolean exist = false;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			// start a transaction
+			transaction = session.beginTransaction();
+			// get an user object
+			//CORREGIR
+			listOfCourse = session.createQuery("from CourseEntity WHERE name LIKE :name").setParameter("name", name).getSingleResult();
+			// commit transaction
+			transaction.commit();
+			if(listOfCourse != null)
+				exist= true;
+			
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+		return exist;
+		
+	}
 
 	public void delete(int id) {
 		Transaction transaction = null;

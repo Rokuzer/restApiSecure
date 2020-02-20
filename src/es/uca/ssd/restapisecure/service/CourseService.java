@@ -21,6 +21,11 @@ public class CourseService {
 		return courseDao.getCourses();
 	}
 
+	public Boolean existCourse(String name) {
+		return courseDao.searchByName(name);
+	}
+	
+
 	public CourseEntity create(CourseEntity course) {
 		return courseDao.create(course);
 	}

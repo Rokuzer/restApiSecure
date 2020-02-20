@@ -19,7 +19,6 @@ public class UserEntity implements Serializable {
 	@Id
 	@GeneratedValue
 	private int id;
-	private String apiKey;
 
 	@NotNull
 	@Size(min = 3, max = 25)
@@ -44,6 +43,8 @@ public class UserEntity implements Serializable {
 	// @Email
 	@Column(unique = true)
 	private String email;
+
+	private String apiKey;
 
 	public UserEntity() {
 	}
@@ -111,10 +112,11 @@ public class UserEntity implements Serializable {
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
 	}
+
 	@Override
 	public String toString() {
 		return "UserEntity [id=" + id + ", username=" + username + ", password=" + password + ", name=" + name
-				+ ", surname=" + surname + ", email=" + email + "]";
+				+ ", surname=" + surname + ", email=" + email + ", apiKey=" + apiKey + "]";
 	}
 
 }

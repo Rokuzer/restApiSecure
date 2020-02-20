@@ -16,29 +16,28 @@ import es.uca.ssd.restapisecure.service.UserService;
 
 @Path("/users")
 public class UserRestService {
-	
+
 	private UserService userService;
-	
+
 	public UserRestService() {
 		userService = new UserService();
 	}
-	
+
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getUser() {
 		UserEntity user = userService.create("username1", "password1", "name1", "surname1", "email1");
 		return userService.getUser(user.getId()).toString();
 	}
-	
+
 	@GET
 	@Path("/getusers")
-	//@Produces(MediaType.APPLICATION_JSON)
-	public List<UserEntity> getUsers(){
-		UserService userService = new UserService();
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<UserEntity> getUsers() {
 		List<UserEntity> listUsers = userService.getUsers();
 		return listUsers;
 	}
-	
+
 	@POST
 	@Path("/createwithkey")
 	@Consumes(MediaType.APPLICATION_JSON)

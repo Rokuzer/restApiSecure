@@ -43,7 +43,7 @@ public class UserRestService {
 	@Path("/createwithkey")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public UserEntity getApiKey(UserEntity myUser) {
+	public UserEntity getApiKey(UserEntity myUser) throws Exception{
 		UUID apikey = UUID.randomUUID();
 		UserService userService = new UserService();
 		

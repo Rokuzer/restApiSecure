@@ -33,7 +33,7 @@ public class CourseRestService {
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public Response searchCourse(@PathParam("name")String name) throws Exception {
 		if (!checkInput(name.equals("%") ? "a" : name))
-	        return Response.status(Response.Status.BAD_REQUEST).entity("Input invalido").build();
+	        return Response.status(Response.Status.BAD_REQUEST).entity("invalid input").build();
 		
 		if(courseService.existCourse(name))
 			return Response.ok("The course searched, exist").build();

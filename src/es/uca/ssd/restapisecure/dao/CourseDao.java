@@ -93,17 +93,17 @@ public class CourseDao {
 	
 	public Boolean searchByName(String name) {
 		Transaction transaction = null;
-		Object listOfCourse = null;
+		List<CourseEntity> listOfCourse = null;
 		Boolean exist = false;
 		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			// start a transaction
 			transaction = session.beginTransaction();
 			// get an user object
 			//CORREGIR
-			listOfCourse = session.createQuery("from CourseEntity WHERE name LIKE :name").setParameter("name", name).getSingleResult();
+			listOfCourse = session.createQuery("from CourseEntity WHERE name LIKE :name").setParameter("name", name).getResultList();
 			// commit transaction
 			transaction.commit();
-			if(listOfCourse != null)
+			if(listOfCourse.size() > 0)
 				exist= true;
 			
 		} catch (Exception e) {

@@ -6,19 +6,33 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotEmpty;
+
 @SuppressWarnings("serial")
 @Entity
 @XmlRootElement
+@Table(name = "User", uniqueConstraints = @UniqueConstraint(columnNames = "username"))
+@NamedQueries({ @NamedQuery(name = "User.allUsers", query = "SELECT u FROM User u"),
+		@NamedQuery(name = "User.allUsersOrderedByUsername", query = "SELECT u FROM User u ORDER BY username ASC"),
+		@NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE username LIKE :username"),
+		@NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE email LIKE :email") })
 public class UserEntity implements Serializable {
 
 	@Id
 	@GeneratedValue
-	private int id;
+	@GenericGenerator(name = "uuid", strategy = "uuid2")
+	private String id;
 
 	@NotNull
 	@Size(min = 3, max = 25)
@@ -39,8 +53,8 @@ public class UserEntity implements Serializable {
 	private String surname;
 
 	@NotNull
-	// @NotEmpty
-	// @Email
+	@NotEmpty
+	@Email
 	@Column(unique = true)
 	private String email;
 
@@ -57,11 +71,11 @@ public class UserEntity implements Serializable {
 		this.email = email;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

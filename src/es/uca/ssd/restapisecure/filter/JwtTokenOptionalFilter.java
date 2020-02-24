@@ -2,14 +2,11 @@ package es.uca.ssd.restapisecure.filter;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
@@ -23,9 +20,9 @@ import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import es.uca.ssd.restapisecure.rest.UserRestService;
 
 @Provider
-@JwtTokenRequired
+@JwtTokenOptional
 @Priority(Priorities.AUTHENTICATION)
-public class JwtTokenRequiredFilter implements ContainerRequestFilter {
+public class JwtTokenOptionalFilter implements ContainerRequestFilter {
 
 	private static String HTTP_HEADER_TOKEN = "token";
 
@@ -36,9 +33,8 @@ public class JwtTokenRequiredFilter implements ContainerRequestFilter {
 		JsonWebKey jwk = UserRestService.myJwk;
 
 		if (token == null || jwk == null) {
-			Map<String, String> responseObj = new HashMap<>();
-			responseObj.put("error", "invalid token " + token);
-			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(responseObj).build());
+			final SecurityContext securityContext = requestContext.getSecurityContext();
+			requestContext.setSecurityContext(fillSecurityContext(null, securityContext));
 		} else {
 			// Validate Token's authenticity and check claims
 			JwtConsumer jwtConsumer = new JwtConsumerBuilder().setRequireExpirationTime()
@@ -51,40 +47,41 @@ public class JwtTokenRequiredFilter implements ContainerRequestFilter {
 
 				String userid = jwtClaims.getStringClaimValue("userid");
 				final SecurityContext securityContext = requestContext.getSecurityContext();
-				if (userid != null) {
-					requestContext.setSecurityContext(new SecurityContext() {
-						@Override
-						public Principal getUserPrincipal() {
-							return new Principal() {
-								@Override
-								public String getName() {
-									return userid;
-								}
-							};
-						}
-
-						@Override
-						public boolean isUserInRole(String role) {
-							return securityContext.isUserInRole(role);
-						}
-
-						@Override
-						public boolean isSecure() {
-							return securityContext.isSecure();
-						}
-
-						@Override
-						public String getAuthenticationScheme() {
-							return securityContext.getAuthenticationScheme();
-						}
-					});
-				}
+				requestContext.setSecurityContext(fillSecurityContext(userid, securityContext));
 			} catch (InvalidJwtException | MalformedClaimException e) {
-				Map<String, String> responseObj = new HashMap<>();
-				responseObj.put("error", "invalid token " + token);
-				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(responseObj).build());
+				final SecurityContext securityContext = requestContext.getSecurityContext();
+				requestContext.setSecurityContext(fillSecurityContext(null, securityContext));
 			}
 		}
+	}
+
+	private SecurityContext fillSecurityContext(String userid, final SecurityContext securityContext) {
+		return new SecurityContext() {
+			@Override
+			public Principal getUserPrincipal() {
+				return new Principal() {
+					@Override
+					public String getName() {
+						return userid;
+					}
+				};
+			}
+
+			@Override
+			public boolean isUserInRole(String role) {
+				return securityContext.isUserInRole(role);
+			}
+
+			@Override
+			public boolean isSecure() {
+				return securityContext.isSecure();
+			}
+
+			@Override
+			public String getAuthenticationScheme() {
+				return securityContext.getAuthenticationScheme();
+			}
+		};
 	}
 
 }

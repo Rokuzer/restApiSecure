@@ -1,10 +1,8 @@
 package es.uca.ssd.restapisecure.rest;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;

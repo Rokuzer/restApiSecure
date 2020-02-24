@@ -60,7 +60,6 @@ public class UserEntity implements Serializable {
 	@Column(unique = true)
 	private String email;
 
-	@Size(max = 1000)
 	private String apiKey;
 
 	public UserEntity() {

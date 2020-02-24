@@ -1,14 +1,15 @@
 package es.uca.ssd.restapisecure.filter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
@@ -24,18 +25,25 @@ import es.uca.ssd.restapisecure.rest.UserRestService;
 @JwtTokenRequired
 @Priority(Priorities.AUTHENTICATION)
 public class JwtTokenRequiredFilter implements ContainerRequestFilter {
+	
+	private static String HTTP_HEADER_TOKEN = "token";
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 		// Get the HTTP Authorization header from the request
-		String token = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+		String token = requestContext.getHeaderString(HTTP_HEADER_TOKEN);
+		JsonWebKey jwk = UserRestService.myJwk;
+		
+		List<String> userinfo = new ArrayList<>();
+		userinfo.add("uno");
+		userinfo.add("dos");
+//		requestContext.getHeaders().put("userinfo", new ArrayList<>());
 
-		if (token == null) {
+		if (token == null || jwk == null) {
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("error", "invalid token " + token);
 			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(responseObj).build());
 		} else {
-			JsonWebKey jwk = UserRestService.myJwk;
 			// Validate Token's authenticity and check claims
 			JwtConsumer jwtConsumer = new JwtConsumerBuilder().setRequireExpirationTime()
 					.setAllowedClockSkewInSeconds(30).setRequireSubject().setExpectedIssuer("uca")

@@ -83,6 +83,7 @@ public class UserService {
 		claims.setIssuedAtToNow();
 		claims.setNotBeforeMinutesInThePast(2);
 		claims.setSubject(user.getUsername());
+		claims.setStringClaim("userid", user.getId());
 		claims.setStringListClaim("roles", "basicRestUser");
 
 		JsonWebSignature jws = new JsonWebSignature();
@@ -98,15 +99,17 @@ public class UserService {
 			System.out.println(e);
 		}
 		
-		UserEntity storedUser = findByUsername(user.getUsername());
-		storedUser.setApiKey(jwt);
-		try {
-			userDao.update(storedUser);
-		} catch (DuplicateEmailException e) {
-			// This will never happen
-		}
+//		UserEntity storedUser = findByUsername(user.getUsername());
+//		storedUser.setApiKey(jwt);
+//		try {
+//			userDao.update(storedUser);
+//		} catch (DuplicateEmailException e) {
+//			// This will never happen
+//		}
+//		
+//		return storedUser.getApiKey();
 		
-		return storedUser.getApiKey();
+		return jwt;
 	}
 
 }

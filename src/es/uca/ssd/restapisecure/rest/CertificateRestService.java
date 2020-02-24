@@ -6,12 +6,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import es.uca.ssd.restapisecure.model.CertificateEntity;
-import es.uca.ssd.restapisecure.model.CourseEntity;
 import es.uca.ssd.restapisecure.service.CertificateService;
-import es.uca.ssd.restapisecure.service.CourseService;
 
 @Path("/certificates")
 public class CertificateRestService {
+	
+	/*
+	 * API courses:
+	 * Generar certificado:
+	 * POST /generatecertificate/{idcourse}/{iduser}
+	 * 
+	 * Obtener certificado:
+	 * GET /getcertificate/{idcertificate}
+	 * 
+	 */
 	
 	private CertificateService certificateService;
 	

@@ -301,13 +301,15 @@ public class UserRestService {
 			responseObj.put("error", "Please, configure headers properly");
 			return Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj).build();
 		}
-		if (userService.findByUsername(username) == null) {
+		UserEntity storedUser = userService.findByUsername(username);
+		if (storedUser == null) {
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("error", "User with username=`" + username + "` not found");
 			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
 		}
 
 		UserEntity user = new UserEntity();
+		user.setId(storedUser.getId());
 		user.setUsername(username);
 		user.setPassword(password);
 

@@ -1,5 +1,6 @@
 package es.uca.ssd.restapisecure.rest;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -16,6 +17,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 
+import es.uca.ssd.restapisecure.dao.CourseDao;
 import es.uca.ssd.restapisecure.model.CourseEntity;
 import es.uca.ssd.restapisecure.model.UserEntity;
 import es.uca.ssd.restapisecure.service.CourseService;
@@ -58,22 +60,46 @@ public class CourseRestService {
 		}
 	}
 	
-	@POST
-	@Path("/updateNamecourse/{idCouse}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-	public Response updateCourse(String name,@PathParam("idCourse")Integer idCourse, @HeaderParam("idUser") Integer id, @HeaderParam("apikey") String apikey) throws Exception{
+	@GET
+	@Path("/getcourses")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCourses() throws Exception {
 		try {
-			UserService userService = new UserService();
+			CourseService courseService = new CourseService();
+			List<CourseEntity> listCourses = courseService.getCourses();
+			return Response.ok(listCourses).header("X-Content-Type-Options", "nosniff").build();
+		} catch(Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+					
+		}
+	
+	}
+	
+	
+	@POST
+	@Path("updateNamecourse")
+	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	public Response updateCourse(@HeaderParam("name")String name,  @HeaderParam("idUser") Integer id, @HeaderParam("apikey") String apikey, @HeaderParam("idCourse")Integer idCourse) throws Exception{
+	try {
+
+		UserService userService = new UserService();
+
 			UserEntity User = userService.getUser(id);
-			if (User != null || !User.getApiKey().equals(apikey)) {
-					CourseEntity course = courseService.getCourse(id);
+			
+			CourseDao courseDao = new CourseDao();
+			
+		if (User != null && User.getApiKey().equals(apikey)) {
+			
+					CourseEntity course = courseService.getCourse(idCourse);
+					
 					if(course!=null) {
+						
 						course.setName(name);
+						courseDao.update(course);
 						return Response.ok("the course has been update.").header("X-Content-Type-Options", "nosniff").build();
 					}
 					else {
-						return Response.ok("Sorry, the course not exist").header("X-Content-Type-Options", "nosniff").build();
+						return Response.ok("The course not exist").header("X-Content-Type-Options", "nosniff").build();
 					}
 			}
 			else {

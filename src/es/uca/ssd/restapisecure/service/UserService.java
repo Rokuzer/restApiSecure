@@ -3,6 +3,12 @@ package es.uca.ssd.restapisecure.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jws.AlgorithmIdentifiers;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.lang.JoseException;
+
 import es.uca.ssd.restapisecure.dao.UserDao;
 import es.uca.ssd.restapisecure.exception.DuplicateEmailException;
 import es.uca.ssd.restapisecure.exception.DuplicateUsernameException;
@@ -48,7 +54,7 @@ public class UserService {
 		if (user.getSurname() != null) {
 			editUser.setSurname(user.getSurname());
 		}
-		
+
 		return userDao.update(user);
 	}
 
@@ -66,7 +72,41 @@ public class UserService {
 		} catch (DuplicateEmailException e) {
 			// This will never happen
 		}
-		return user.getApiKey().toString();
+		return user.getApiKey();
+	}
+
+	public String generateJwtToken(UserEntity user, RsaJsonWebKey jwk) {
+		JwtClaims claims = new JwtClaims();
+		claims.setIssuer("uca");
+		claims.setExpirationTimeMinutesInTheFuture(10);
+		claims.setGeneratedJwtId();
+		claims.setIssuedAtToNow();
+		claims.setNotBeforeMinutesInThePast(2);
+		claims.setSubject(user.getUsername());
+		claims.setStringListClaim("roles", "basicRestUser");
+
+		JsonWebSignature jws = new JsonWebSignature();
+		jws.setPayload(claims.toJson());
+		jws.setKeyIdHeaderValue(jwk.getKeyId());
+		jws.setKey(jwk.getPrivateKey());
+		jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_USING_SHA256);
+
+		String jwt = null;
+		try {
+			jwt = jws.getCompactSerialization();
+		} catch (JoseException e) {
+			System.out.println(e);
+		}
+		
+		UserEntity storedUser = findByUsername(user.getUsername());
+		storedUser.setApiKey(jwt);
+		try {
+			userDao.update(storedUser);
+		} catch (DuplicateEmailException e) {
+			// This will never happen
+		}
+		
+		return storedUser.getApiKey();
 	}
 
 }

@@ -19,19 +19,21 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import es.uca.ssd.restapisecure.generator.SecureIdentifierGenerator;
+
 @SuppressWarnings("serial")
 @Entity
 @XmlRootElement
 @Table(name = "User", uniqueConstraints = @UniqueConstraint(columnNames = "username"))
-@NamedQueries({ @NamedQuery(name = "User.allUsers", query = "SELECT u FROM User u"),
-		@NamedQuery(name = "User.allUsersOrderedByUsername", query = "SELECT u FROM User u ORDER BY username ASC"),
-		@NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE username LIKE :username"),
-		@NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE email LIKE :email") })
+@NamedQueries({ @NamedQuery(name = "User.allUsers", query = "SELECT u FROM UserEntity u"),
+		@NamedQuery(name = "User.allUsersOrderedByUsername", query = "SELECT u FROM UserEntity u ORDER BY username ASC"),
+		@NamedQuery(name = "User.findByUsername", query = "SELECT u FROM UserEntity u WHERE username LIKE :username"),
+		@NamedQuery(name = "User.findByEmail", query = "SELECT u FROM UserEntity u WHERE email LIKE :email") })
 public class UserEntity implements Serializable {
 
 	@Id
-	@GeneratedValue
-	@GenericGenerator(name = "uuid", strategy = "uuid2")
+	@GeneratedValue(generator = SecureIdentifierGenerator.GENERATOR_NAME)
+	@GenericGenerator(name = SecureIdentifierGenerator.GENERATOR_NAME, strategy = "es.uca.ssd.restapisecure.generator.SecureIdentifierGenerator")
 	private String id;
 
 	@NotNull
@@ -58,6 +60,7 @@ public class UserEntity implements Serializable {
 	@Column(unique = true)
 	private String email;
 
+	@Size(max = 1000)
 	private String apiKey;
 
 	public UserEntity() {

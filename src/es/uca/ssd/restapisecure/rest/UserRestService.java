@@ -1,8 +1,10 @@
 package es.uca.ssd.restapisecure.rest;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,8 +30,6 @@ import javax.ws.rs.core.Response;
 import org.jose4j.jwk.JsonWebKey;
 import org.jose4j.jwk.RsaJsonWebKey;
 import org.jose4j.jwk.RsaJwkGenerator;
-import org.jose4j.jws.AlgorithmIdentifiers;
-import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
@@ -41,13 +41,14 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import es.uca.ssd.restapisecure.exception.DuplicateEmailException;
 import es.uca.ssd.restapisecure.exception.DuplicateUsernameException;
+import es.uca.ssd.restapisecure.filter.JwtTokenRequired;
 import es.uca.ssd.restapisecure.model.UserEntity;
 import es.uca.ssd.restapisecure.service.UserService;
 
 @Path("/users")
 public class UserRestService {
 
-	private static JsonWebKey myJwk = null;
+	public static JsonWebKey myJwk = null;
 
 	private static Validator validator;
 
@@ -60,10 +61,18 @@ public class UserRestService {
 		userService = new UserService();
 	}
 
+	@JwtTokenRequired
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listAllUsers() {
-		return Response.ok().entity(userService.findAllOrderedByUsername()).build();
+		List<UserEntity> users = userService.findAllOrderedByUsername();
+		for (UserEntity user : users) {
+			sanitizeUser(user);
+		}
+
+		Map<String, List<UserEntity>> responseObj = new HashMap<>();
+		responseObj.put("users", users);
+		return Response.ok().entity(responseObj).build();
 	}
 
 	@GET
@@ -72,8 +81,11 @@ public class UserRestService {
 	public Response lookupUserById(@PathParam("id") String id) {
 		UserEntity user = userService.findById(id);
 		if (user == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			Map<String, String> responseObj = new HashMap<>();
+			responseObj.put("error", "User with ID=`" + id + "` not found");
+			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
 		}
+		sanitizeUser(user);
 		return Response.ok().entity(user).build();
 	}
 
@@ -87,6 +99,7 @@ public class UserRestService {
 			validateUser(user);
 
 			userService.create(user);
+			sanitizeUser(user);
 
 			// Create an "ok" response
 			builder = Response.ok().entity(user);
@@ -106,7 +119,7 @@ public class UserRestService {
 			// UserRestService.class.getSimpleName(), "Email " + user.getEmail() + "
 			// already exists"
 			Map<String, String> responseObj = new HashMap<>();
-			responseObj.put("username", "Username already exists");
+			responseObj.put("email", "Email already exists");
 			builder = Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj);
 		} catch (ConstraintViolationException e) {
 			// Handle bean validation issues
@@ -166,6 +179,10 @@ public class UserRestService {
 		return Response.status(Response.Status.BAD_REQUEST).entity(responseObj);
 	}
 
+	private void sanitizeUser(UserEntity user) {
+		user.setPassword(String.join("", Collections.nCopies(user.getPassword().length(), "*")));
+	}
+
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -187,7 +204,7 @@ public class UserRestService {
 			// UserRestService.class.getSimpleName(), "Email " + user.getEmail() + "
 			// already exists"
 			Map<String, String> responseObj = new HashMap<>();
-			responseObj.put("username", "Username already exists");
+			responseObj.put("email", "Email already exists");
 			builder = Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj);
 		} catch (ConstraintViolationException e) {
 			// Handle bean validation issues
@@ -225,7 +242,9 @@ public class UserRestService {
 	public Response removeUser(@PathParam("id") String id) {
 		UserEntity user = userService.findById(id);
 		if (user == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			Map<String, String> responseObj = new HashMap<>();
+			responseObj.put("error", "User with ID=`" + id + "` not found");
+			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
 		} else if (userService.delete(id)) {
 			return Response.ok().build();
 		}
@@ -235,19 +254,28 @@ public class UserRestService {
 	@POST
 	@Path("/generateApiKey")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response getApiKey(UserEntity user) {
 		if (user == null) {
-			throw new WebApplicationException(Response.Status.PRECONDITION_FAILED);
+			Map<String, String> responseObj = new HashMap<>();
+			responseObj.put("error", "User was not provided");
+			return Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj).build();
 		} else if (userService.findById(user.getId()) == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			Map<String, String> responseObj = new HashMap<>();
+			responseObj.put("error", "User with ID=`" + user.getId() + "` not found");
+			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
 		} else {
 			String apiKey = userService.generateApiKey(user.getId());
 			if (apiKey != null && !apiKey.isEmpty()) {
-				return Response.ok().entity(apiKey).build();
+				Map<String, String> responseObj = new HashMap<>();
+				responseObj.put("apikey", apiKey);
+				return Response.ok().entity(responseObj).build();
 			}
 		}
-		throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+
+		Map<String, String> responseObj = new HashMap<>();
+		responseObj.put("error", "Unmanaged error");
+		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseObj).build();
 	}
 
 	@POST
@@ -268,6 +296,17 @@ public class UserRestService {
 	public Response authenticateCredentials(@HeaderParam("username") String username,
 			@HeaderParam("password") String password)
 			throws JsonGenerationException, JsonMappingException, IOException {
+		if (username == null || password == null) {
+			Map<String, String> responseObj = new HashMap<>();
+			responseObj.put("error", "Please, configure headers properly");
+			return Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj).build();
+		}
+		if (userService.findByUsername(username) == null) {
+			Map<String, String> responseObj = new HashMap<>();
+			responseObj.put("error", "User with username=`" + username + "` not found");
+			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
+		}
+
 		UserEntity user = new UserEntity();
 		user.setUsername(username);
 		user.setPassword(password);
@@ -281,31 +320,10 @@ public class UserRestService {
 			e.printStackTrace();
 		}
 
-		JwtClaims claims = new JwtClaims();
-		claims.setIssuer("uca");
-		claims.setExpirationTimeMinutesInTheFuture(10);
-		claims.setGeneratedJwtId();
-		claims.setIssuedAtToNow();
-		claims.setNotBeforeMinutesInThePast(2);
-		claims.setSubject(user.getUsername());
-		claims.setStringListClaim("roles", "basicRestUser");
-
-		JsonWebSignature jws = new JsonWebSignature();
-		jws.setPayload(claims.toJson());
-		jws.setKeyIdHeaderValue(jwk.getKeyId());
-		jws.setKey(jwk.getPrivateKey());
-		jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_USING_SHA256);
-
-		String jwt = null;
-		try {
-			jwt = jws.getCompactSerialization();
-		} catch (JoseException e) {
-			System.out.println(e);
-		}
-		user.setApiKey(jwt);
-
-		// SET TOKEN
-		return Response.status(200).entity(jwt).build();
+		String jwtToken = userService.generateJwtToken(user, jwk);
+		Map<String, String> responseObj = new HashMap<>();
+		responseObj.put("token", jwtToken);
+		return Response.ok().entity(responseObj).build();
 	}
 
 	@POST

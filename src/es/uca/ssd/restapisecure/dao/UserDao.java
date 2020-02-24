@@ -2,6 +2,7 @@ package es.uca.ssd.restapisecure.dao;
 
 import java.util.List;
 
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
 import org.hibernate.Session;
@@ -26,6 +27,8 @@ public class UserDao {
 
 			// commit transaction
 			transaction.commit();
+		} catch (NoResultException e) {
+			return null;
 		} catch (Exception e) {
 			if (transaction != null) {
 				transaction.rollback();
@@ -41,12 +44,14 @@ public class UserDao {
 		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			// start a transaction
 			transaction = session.beginTransaction();
-			
+
 			// get an user object
 			user = session.get(UserEntity.class, id);
-			
+
 			// commit transaction
 			transaction.commit();
+		} catch (NoResultException e) {
+			return null;
 		} catch (Exception e) {
 			if (transaction != null) {
 				transaction.rollback();
@@ -71,6 +76,8 @@ public class UserDao {
 
 			// commit transaction
 			transaction.commit();
+		} catch (NoResultException e) {
+			return null;
 		} catch (Exception e) {
 			if (transaction != null) {
 				transaction.rollback();
@@ -95,6 +102,8 @@ public class UserDao {
 
 			// commit transaction
 			transaction.commit();
+		} catch (NoResultException e) {
+			return null;
 		} catch (Exception e) {
 			if (transaction != null) {
 				transaction.rollback();
@@ -114,7 +123,7 @@ public class UserDao {
 			transaction = session.beginTransaction();
 
 			// save the student object
-			session.save(user);
+			session.persist(user);
 
 			// commit transaction
 			transaction.commit();
@@ -140,15 +149,15 @@ public class UserDao {
 	}
 
 	public UserEntity update(UserEntity user) throws DuplicateEmailException {
-		checkDuplicateEmail(user.getEmail());
-
+		checkDuplicateEmail(user);
+		
 		Transaction transaction = null;
 		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			// start a transaction
 			transaction = session.beginTransaction();
 
 			// save the student object
-			session.merge(user);
+			session.update(user);
 			session.flush();
 
 			// commit transaction
@@ -160,6 +169,13 @@ public class UserDao {
 			e.printStackTrace();
 		}
 		return user;
+	}
+
+	private void checkDuplicateEmail(UserEntity user) throws DuplicateEmailException {
+		UserEntity storedUser = this.findByEmail(user.getEmail());
+		if (storedUser != null && !storedUser.getId().equals(user.getId())) {
+			throw new DuplicateEmailException("Email " + user.getEmail() + " already exists");
+		}
 	}
 
 	public void delete(String id) {

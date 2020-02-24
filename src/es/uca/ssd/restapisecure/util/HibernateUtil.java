@@ -9,6 +9,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import es.uca.ssd.restapisecure.model.UserEntity;
+import es.uca.ssd.restapisecure.model.CertificateEntity;
+import es.uca.ssd.restapisecure.model.CourseEntity;
 
 public class HibernateUtil {
 
@@ -36,7 +38,9 @@ public class HibernateUtil {
 
 				configuration.setProperties(settings);
 				configuration.addAnnotatedClass(UserEntity.class);
-
+				configuration.addAnnotatedClass(CourseEntity.class);
+				configuration.addAnnotatedClass(CertificateEntity.class);
+				
 				ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 						.applySettings(configuration.getProperties()).build();
 				System.out.println("Hibernate Java Config serviceRegistry created");

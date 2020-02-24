@@ -6,19 +6,35 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import es.uca.ssd.restapisecure.generator.SecureIdentifierGenerator;
+
 @SuppressWarnings("serial")
 @Entity
 @XmlRootElement
+@Table(name = "User", uniqueConstraints = @UniqueConstraint(columnNames = "username"))
+@NamedQueries({ @NamedQuery(name = "User.allUsers", query = "SELECT u FROM UserEntity u"),
+		@NamedQuery(name = "User.allUsersOrderedByUsername", query = "SELECT u FROM UserEntity u ORDER BY username ASC"),
+		@NamedQuery(name = "User.findByUsername", query = "SELECT u FROM UserEntity u WHERE username LIKE :username"),
+		@NamedQuery(name = "User.findByEmail", query = "SELECT u FROM UserEntity u WHERE email LIKE :email") })
 public class UserEntity implements Serializable {
 
 	@Id
-	@GeneratedValue
-	private int id;
+	@GeneratedValue(generator = SecureIdentifierGenerator.GENERATOR_NAME)
+	@GenericGenerator(name = SecureIdentifierGenerator.GENERATOR_NAME, strategy = "es.uca.ssd.restapisecure.generator.SecureIdentifierGenerator")
+	private String id;
 
 	@NotNull
 	@Size(min = 3, max = 25)
@@ -39,10 +55,13 @@ public class UserEntity implements Serializable {
 	private String surname;
 
 	@NotNull
-	// @NotEmpty
-	// @Email
+	@NotEmpty
+	@Email
 	@Column(unique = true)
 	private String email;
+
+	@Size(max = 1000)
+	private String apiKey;
 
 	public UserEntity() {
 	}
@@ -55,11 +74,11 @@ public class UserEntity implements Serializable {
 		this.email = email;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
@@ -103,10 +122,18 @@ public class UserEntity implements Serializable {
 		this.email = email;
 	}
 
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}
+
 	@Override
 	public String toString() {
 		return "UserEntity [id=" + id + ", username=" + username + ", password=" + password + ", name=" + name
-				+ ", surname=" + surname + ", email=" + email + "]";
+				+ ", surname=" + surname + ", email=" + email + ", apiKey=" + apiKey + "]";
 	}
 
 }

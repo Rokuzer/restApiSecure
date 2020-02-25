@@ -52,12 +52,12 @@ public class UserEntity implements Serializable {
 
 	@NotNull
 	@Size(min = 3, max = 25)
-	@Pattern(regexp = "[^0-9]*", message = "Must not contain numbers")
+	@Pattern(regexp = "^[A-Za-z ]+$", message = "Must not contain numbers or symbols")
 	private String name;
 
 	@NotNull
 	@Size(min = 3, max = 25)
-	@Pattern(regexp = "[^0-9]*", message = "Must not contain numbers")
+	@Pattern(regexp = "^[A-Za-z ]+$", message = "Must not contain numbers or symbols")
 	private String surname;
 
 	@NotNull

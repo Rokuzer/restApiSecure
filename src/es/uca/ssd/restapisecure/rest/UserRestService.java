@@ -139,9 +139,9 @@ public class UserRestService {
 			builder = createViolationResponse(e.getConstraintViolations());
 		} catch (ValidationException e) {
 			// Handle the unique constrain violation
-			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: Email taken");
+			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: " + e.getMessage());
 			Map<String, String> responseObj = new HashMap<>();
-			responseObj.put("email", "Email taken");
+			responseObj.put("error", e.getMessage());
 			builder = Response.status(Response.Status.CONFLICT).entity(responseObj);
 		} catch (Exception e) {
 			// Handle generic exceptions

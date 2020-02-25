@@ -8,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -16,6 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @SuppressWarnings("serial")
 @Entity
 @XmlRootElement
+@Table(name = "Course", uniqueConstraints = @UniqueConstraint(columnNames = "id"))
 public class CourseEntity implements Serializable {
 
 	@Id
@@ -37,7 +40,12 @@ public class CourseEntity implements Serializable {
 	// @NotEmpty
 	// @Column(unique = true)
 	private Integer time;
+	
+	//price in Eurs
+		@NotNull
+		private Integer price;
 
+	
 	@ManyToMany
 	private Set<UserEntity> users;
 
@@ -84,9 +92,18 @@ public class CourseEntity implements Serializable {
 		this.time = time;
 	}
 
+	public Integer getPrice() {
+		return price;
+	}
+
+	public void setPrice(Integer price) {
+		this.price = price;
+	}
+
+	
 	@Override
 	public String toString() {
-		return "CourseEntity [id=" + id + ", name=" + name + ", description=" + description + ", time=" + time + "]";
+		return "CourseEntity [id=" + id + ", name=" + name + ", description=" + description + ", time=" + time + ", price ="+ price +"]";
 	}
 
 }

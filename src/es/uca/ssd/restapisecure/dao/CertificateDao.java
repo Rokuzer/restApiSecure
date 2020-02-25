@@ -2,6 +2,8 @@ package es.uca.ssd.restapisecure.dao;
 
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -113,5 +115,29 @@ public class CertificateDao {
 			e.printStackTrace();
 		}
 	}
+	
+	public CertificateEntity findById(Integer id) {
+		Transaction transaction = null;
+		CertificateEntity certificate = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			// start a transaction
+			transaction = session.beginTransaction();
+
+			// get an user object
+			certificate = session.get(CertificateEntity.class, id);
+
+			// commit transaction
+			transaction.commit();
+		} catch (NoResultException e) {
+			return null;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+		return certificate;
+	}
+	
 
 }

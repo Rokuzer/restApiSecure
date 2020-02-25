@@ -22,6 +22,10 @@ public class CertificateService {
 	public List<CertificateEntity> getCertificates() {
 		return certificateDao.getCertificates();
 	}
+	
+	public CertificateEntity findById(Integer id) {
+		return certificateDao.findById(id);
+	}
 
 	public CertificateEntity create(CertificateEntity certificate) {
 		return certificateDao.create(certificate);

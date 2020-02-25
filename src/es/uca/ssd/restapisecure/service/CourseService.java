@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import es.uca.ssd.restapisecure.dao.CourseDao;
 import es.uca.ssd.restapisecure.model.CourseEntity;
+import es.uca.ssd.restapisecure.model.UserEntity;
 
 public class CourseService {
 	
@@ -21,6 +22,10 @@ public class CourseService {
 
 	public List<CourseEntity> getCourses() {
 		return courseDao.getCourses();
+	}
+	
+	public CourseEntity findById(Integer id) {
+		return courseDao.findById(id);
 	}
 
 	public Boolean existCourse(String name) {
@@ -40,8 +45,9 @@ public class CourseService {
 		return courseDao.update(course);
 	}
 
-	public void delete(int id) {
+	public boolean delete(Integer id) {
 		courseDao.delete(id);
+		return courseDao.findById(id) == null;
 	}
 
 }

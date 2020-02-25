@@ -2,10 +2,13 @@ package es.uca.ssd.restapisecure.dao;
 
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import es.uca.ssd.restapisecure.model.CourseEntity;
+import es.uca.ssd.restapisecure.model.UserEntity;
 import es.uca.ssd.restapisecure.util.HibernateUtil;
 
 public class CourseDao {
@@ -50,6 +53,54 @@ public class CourseDao {
 		}
 		return listOfCourse;
 	}
+	
+	public CourseEntity findById(Integer id) {
+		Transaction transaction = null;
+		CourseEntity course = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			// start a transaction
+			transaction = session.beginTransaction();
+
+			// get an user object
+			course = session.get(CourseEntity.class, id);
+
+			// commit transaction
+			transaction.commit();
+		} catch (NoResultException e) {
+			return null;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+		return course;
+	}
+	
+	public void delete(Integer id) {
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			// start a transaction
+			transaction = session.beginTransaction();
+
+			// Delete a user object
+			
+			CourseEntity course = findById(id);
+			if (course != null) {
+				session.delete(course);
+			}
+
+			// commit transaction
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+	}
+	
+	//-------------------
 
 	public CourseEntity create(CourseEntity course) {
 		Transaction transaction = null;
@@ -116,26 +167,6 @@ public class CourseDao {
 		
 	}
 
-	public void delete(int id) {
-		Transaction transaction = null;
-		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-			// start a transaction
-			transaction = session.beginTransaction();
-
-			// Delete a user object
-			CourseEntity course = session.get(CourseEntity.class, id);
-			if (course != null) {
-				session.delete(course);
-			}
-
-			// commit transaction
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null) {
-				transaction.rollback();
-			}
-			e.printStackTrace();
-		}
-	}
+	
 
 }

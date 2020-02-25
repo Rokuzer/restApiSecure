@@ -32,20 +32,14 @@ public class CourseEntity implements Serializable {
 
 	@NotNull
 	@Size(min = 3, max = 255)
-	// @Pattern(regexp = "[^0-9]*", message = "Must not contain numbers")
 	private String description;
 
-	// Time in hours
 	@NotNull
-	// @NotEmpty
-	// @Column(unique = true)
 	private Integer time;
-	
-	//price in Eurs
-		@NotNull
-		private Integer price;
 
-	
+	@NotNull
+	private Integer price;
+
 	@ManyToMany
 	private Set<UserEntity> users;
 
@@ -100,10 +94,10 @@ public class CourseEntity implements Serializable {
 		this.price = price;
 	}
 
-	
 	@Override
 	public String toString() {
-		return "CourseEntity [id=" + id + ", name=" + name + ", description=" + description + ", time=" + time + ", price ="+ price +"]";
+		return "CourseEntity [id=" + id + ", name=" + name + ", description=" + description + ", time=" + time
+				+ ", price =" + price + "]";
 	}
 
 }

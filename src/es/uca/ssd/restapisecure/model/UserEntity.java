@@ -6,6 +6,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -67,7 +68,7 @@ public class UserEntity implements Serializable {
 
 	private String apiKey;
 
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "enrolled_courses", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "course_id"))
 	private Set<CourseEntity> courses;
 
@@ -140,10 +141,18 @@ public class UserEntity implements Serializable {
 		this.apiKey = apiKey;
 	}
 
+	public Set<CourseEntity> getCourses() {
+		return courses;
+	}
+
+	public void setCourses(Set<CourseEntity> courses) {
+		this.courses = courses;
+	}
+
 	@Override
 	public String toString() {
 		return "UserEntity [id=" + id + ", username=" + username + ", password=" + password + ", name=" + name
-				+ ", surname=" + surname + ", email=" + email + ", apiKey=" + apiKey + "]";
+				+ ", surname=" + surname + ", email=" + email + ", apiKey=" + apiKey + ", courses=" + courses + "]";
 	}
 
 }

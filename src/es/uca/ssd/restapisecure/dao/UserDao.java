@@ -73,7 +73,7 @@ public class UserDao {
 			query.setParameter("username", username);
 			query.setMaxResults(1);
 			user = query.getSingleResult();
-
+			
 			// commit transaction
 			transaction.commit();
 		} catch (NoResultException e) {

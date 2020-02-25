@@ -8,7 +8,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import es.uca.ssd.restapisecure.model.CourseEntity;
-import es.uca.ssd.restapisecure.model.UserEntity;
 import es.uca.ssd.restapisecure.util.HibernateUtil;
 
 public class CourseDao {
@@ -142,6 +141,7 @@ public class CourseDao {
 		return course;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Boolean searchByName(String name) {
 		Transaction transaction = null;
 		List<CourseEntity> listOfCourse = null;

@@ -29,13 +29,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.log4j.Logger;
 import org.jose4j.jwk.JsonWebKey;
 import org.jose4j.jwk.RsaJsonWebKey;
 import org.jose4j.jwk.RsaJwkGenerator;
-import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.consumer.InvalidJwtException;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.lang.JoseException;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -50,6 +47,8 @@ import es.uca.ssd.restapisecure.service.UserService;
 
 @Path("/users")
 public class UserRestService {
+	
+	private static Logger logger = Logger.getLogger(UserRestService.class);
 
 	public static JsonWebKey myJwk = null;
 
@@ -75,6 +74,8 @@ public class UserRestService {
 		for (UserEntity user : users) {
 			sanitizeUser(user);
 		}
+		
+		logger.info("GET /users - userid=" + sctx.getUserPrincipal().getName() + " - OK");
 
 		Map<String, List<UserEntity>> responseObj = new HashMap<>();
 		responseObj.put("users", users);
@@ -88,16 +89,22 @@ public class UserRestService {
 	public Response lookupUserById(@PathParam("id") String id) {
 		UserEntity user = userService.findById(id);
 		if (user == null) {
+			logger.error("GET /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: User with ID=`" + id + "` not found");
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("error", "User with ID=`" + id + "` not found");
 			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
 		}
+		
+		sanitizeUser(user);
+		
 		if (sctx.getUserPrincipal() == null || sctx.getUserPrincipal().getName() == null) {
-			sanitizeUser(user);
+			user.setCourses(null);
 		}
+		logger.info("GET /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - OK");
 		return Response.ok().entity(user).build();
 	}
 
+	@JwtTokenRequired
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -110,48 +117,35 @@ public class UserRestService {
 			userService.create(user);
 			sanitizeUser(user);
 
+			logger.info("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - OK");
+			
 			// Create an "ok" response
 			builder = Response.ok().entity(user);
 		} catch (DuplicateUsernameException e) {
 			// Handle the username duplication
-			// TODO:
-			// DuplicateUsernameException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Username " + user.getUsername() + "
-			// already exists"
+			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: Username already exists");
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("username", "Username already exists");
 			builder = Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj);
 		} catch (DuplicateEmailException e) {
 			// Handle the email duplication
-			// TODO:
-			// DuplicateEmailException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Email " + user.getEmail() + "
-			// already exists"
+			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: Email already exists");
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("email", "Email already exists");
 			builder = Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj);
 		} catch (ConstraintViolationException e) {
 			// Handle bean validation issues
-			// TODO:
-			// ConstraintViolationException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Catched exception: " +
-			// e.getLocalizedMessage()
+			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: " + e.getLocalizedMessage());
 			builder = createViolationResponse(e.getConstraintViolations());
 		} catch (ValidationException e) {
 			// Handle the unique constrain violation
-			// TODO:
-			// ValidationException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Catched exception: " +
-			// e.getLocalizedMessage()
+			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: Email taken");
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("email", "Email taken");
 			builder = Response.status(Response.Status.CONFLICT).entity(responseObj);
 		} catch (Exception e) {
 			// Handle generic exceptions
-			// TODO:
-			// Exception.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Catched exception: " +
-			// e.getMessage()
+			logger.error("POST /users/ - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: " + e.getMessage());
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("error", e.getMessage());
 			builder = Response.status(Response.Status.BAD_REQUEST).entity(responseObj);
@@ -165,20 +159,11 @@ public class UserRestService {
 		Set<ConstraintViolation<UserEntity>> violations = validator.validate(user);
 
 		if (!violations.isEmpty()) {
-			// TODO:
-			// ConstraintViolationException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Found " + violations.size() + "
-			// violations."
 			throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(violations));
 		}
 	}
 
 	private Response.ResponseBuilder createViolationResponse(Set<ConstraintViolation<?>> violations) {
-		// TODO:
-		// Exception.class.getSimpleName(),
-		// UserRestService.class.getSimpleName(), "Validation completed. Found
-		// violations: " + violations.size()
-
 		Map<String, String> responseObj = new HashMap<>();
 
 		for (ConstraintViolation<?> violation : violations) {
@@ -192,6 +177,7 @@ public class UserRestService {
 		user.setPassword(String.join("", Collections.nCopies(user.getPassword().length(), "*")));
 	}
 
+	@JwtTokenRequired
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -204,39 +190,29 @@ public class UserRestService {
 
 			userService.update(id, user);
 
+			logger.info("PUT /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - OK");
+			
 			// Create an "ok" response
 			builder = Response.ok().entity(user);
 		} catch (DuplicateEmailException e) {
 			// Handle the email duplication
-			// TODO:
-			// DuplicateEmailException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Email " + user.getEmail() + "
-			// already exists"
+			logger.error("PUT /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: Email already exists");
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("email", "Email already exists");
 			builder = Response.status(Response.Status.PRECONDITION_FAILED).entity(responseObj);
 		} catch (ConstraintViolationException e) {
 			// Handle bean validation issues
-			// TODO:
-			// ConstraintViolationException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Catched exception: " +
-			// e.getLocalizedMessage()
+			logger.error("PUT /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: " + e.getLocalizedMessage());
 			builder = createViolationResponse(e.getConstraintViolations());
 		} catch (ValidationException e) {
 			// Handle the unique constrain violation
-			// TODO:
-			// ValidationException.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Catched exception: " +
-			// e.getLocalizedMessage()
+			logger.error("PUT /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: " + e.getLocalizedMessage());
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("email", "Email taken");
 			builder = Response.status(Response.Status.CONFLICT).entity(responseObj);
 		} catch (Exception e) {
 			// Handle generic exceptions
-			// TODO:
-			// Exception.class.getSimpleName(),
-			// UserRestService.class.getSimpleName(), "Catched exception: " +
-			// e.getMessage()
+			logger.error("PUT /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: " + e.getMessage());
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("error", e.getMessage());
 			builder = Response.status(Response.Status.BAD_REQUEST).entity(responseObj);
@@ -245,16 +221,19 @@ public class UserRestService {
 		return builder.build();
 	}
 
+	@JwtTokenRequired
 	@DELETE
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeUser(@PathParam("id") String id) {
 		UserEntity user = userService.findById(id);
 		if (user == null) {
+			logger.error("DELETE /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - ERROR: User with ID=`" + id + "` not found");
 			Map<String, String> responseObj = new HashMap<>();
 			responseObj.put("error", "User with ID=`" + id + "` not found");
 			return Response.status(Response.Status.NOT_FOUND).entity(responseObj).build();
 		} else if (userService.delete(id)) {
+			logger.error("DELETE /users/" + id + " - userid=" + sctx.getUserPrincipal().getName() + " - OK");
 			return Response.ok().build();
 		}
 		throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
@@ -335,27 +314,6 @@ public class UserRestService {
 		Map<String, String> responseObj = new HashMap<>();
 		responseObj.put("token", jwtToken);
 		return Response.ok().entity(responseObj).build();
-	}
-
-	@POST
-	@Path("/testJWT")
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response testJWT(@HeaderParam("token") String token, String myName)
-			throws JsonGenerationException, JsonMappingException, IOException {
-		JsonWebKey jwk = myJwk;
-		// Validate Token's authenticity and check claims
-		JwtConsumer jwtConsumer = new JwtConsumerBuilder().setRequireExpirationTime().setAllowedClockSkewInSeconds(30)
-				.setRequireSubject().setExpectedIssuer("uca").setVerificationKey(jwk.getKey()).build();
-		try {
-			// Validate the JWT and process it to the Claims
-			JwtClaims jwtClaims = jwtConsumer.processToClaims(token);
-			System.out.println("JWT validation succeeded! " + jwtClaims);
-		} catch (InvalidJwtException e) {
-			return Response.status(Response.Status.FORBIDDEN.getStatusCode()).entity("Forbidden").build();
-		}
-		String sayHello = "Hello " + myName;
-		return Response.status(200).entity(sayHello).build();
 	}
 
 }

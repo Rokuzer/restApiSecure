@@ -3,9 +3,7 @@ package es.uca.ssd.restapisecure.service;
 import java.util.List;
 
 import es.uca.ssd.restapisecure.dao.CertificateDao;
-import es.uca.ssd.restapisecure.dao.CourseDao;
 import es.uca.ssd.restapisecure.model.CertificateEntity;
-import es.uca.ssd.restapisecure.model.CourseEntity;
 
 public class CertificateService {
 	

@@ -2,11 +2,9 @@ package es.uca.ssd.restapisecure.service;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 
 import es.uca.ssd.restapisecure.dao.CourseDao;
 import es.uca.ssd.restapisecure.model.CourseEntity;
-import es.uca.ssd.restapisecure.model.UserEntity;
 
 public class CourseService {
 	

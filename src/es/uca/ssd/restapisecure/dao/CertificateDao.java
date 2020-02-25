@@ -8,7 +8,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import es.uca.ssd.restapisecure.model.CertificateEntity;
-import es.uca.ssd.restapisecure.model.CourseEntity;
 import es.uca.ssd.restapisecure.util.HibernateUtil;
 
 public class CertificateDao {

@@ -1,11 +1,16 @@
 package es.uca.ssd.restapisecure.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -62,7 +67,12 @@ public class UserEntity implements Serializable {
 
 	private String apiKey;
 
+	@ManyToMany
+	@JoinTable(name = "enrolled_courses", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "course_id"))
+	private Set<CourseEntity> courses;
+
 	public UserEntity() {
+		this.courses = new HashSet<>();
 	}
 
 	public UserEntity(String username, String password, String name, String surname, String email) {
@@ -71,6 +81,7 @@ public class UserEntity implements Serializable {
 		this.name = name;
 		this.surname = surname;
 		this.email = email;
+		this.courses = new HashSet<>();
 	}
 
 	public String getId() {

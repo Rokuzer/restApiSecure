@@ -1,10 +1,13 @@
 package es.uca.ssd.restapisecure.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -26,22 +29,27 @@ public class CourseEntity implements Serializable {
 
 	@NotNull
 	@Size(min = 3, max = 255)
-	//@Pattern(regexp = "[^0-9]*", message = "Must not contain numbers")
+	// @Pattern(regexp = "[^0-9]*", message = "Must not contain numbers")
 	private String description;
-	
-	//Time in hours
+
+	// Time in hours
 	@NotNull
 	// @NotEmpty
-	//@Column(unique = true)
+	// @Column(unique = true)
 	private Integer time;
 
+	@ManyToMany
+	private Set<UserEntity> users;
+
 	public CourseEntity() {
+		this.users = new HashSet<>();
 	}
 
 	public CourseEntity(String name, String description, Integer time) {
 		this.name = name;
 		this.description = description;
 		this.time = time;
+		this.users = new HashSet<>();
 	}
 
 	public int getId() {
